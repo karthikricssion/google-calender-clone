@@ -15,7 +15,7 @@ For date parsing, using [Date-fns](https://date-fns.org/)
     - Year view
 
 ### Timeline
-- As of 6th May 2020 
+- As of 6th May 2020 \
   ![v1](./public/assets/images/v1-6-5-2020.png)
 
 
