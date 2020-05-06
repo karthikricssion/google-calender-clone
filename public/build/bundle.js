@@ -43,6 +43,9 @@ var app = (function () {
     function element(name) {
         return document.createElement(name);
     }
+    function svg_element(name) {
+        return document.createElementNS('http://www.w3.org/2000/svg', name);
+    }
     function text(data) {
         return document.createTextNode(data);
     }
@@ -502,6 +505,37 @@ var app = (function () {
     }
 
     /**
+     * @name addDays
+     * @category Day Helpers
+     * @summary Add the specified number of days to the given date.
+     *
+     * @description
+     * Add the specified number of days to the given date.
+     *
+     * ### v2.0.0 breaking changes:
+     *
+     * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+     *
+     * @param {Date|Number} date - the date to be changed
+     * @param {Number} amount - the amount of days to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
+     * @returns {Date} the new date with the days added
+     * @throws {TypeError} 2 arguments required
+     *
+     * @example
+     * // Add 10 days to 1 September 2014:
+     * var result = addDays(new Date(2014, 8, 1), 10)
+     * //=> Thu Sep 11 2014 00:00:00
+     */
+
+    function addDays(dirtyDate, dirtyAmount) {
+      requiredArgs(2, arguments);
+      var date = toDate(dirtyDate);
+      var amount = toInteger(dirtyAmount);
+      date.setDate(date.getDate() + amount);
+      return date;
+    }
+
+    /**
      * @name getDaysInMonth
      * @category Month Helpers
      * @summary Get the number of days in a month of the given date.
@@ -630,6 +664,84 @@ var app = (function () {
     }
 
     /**
+     * @name startOfDay
+     * @category Day Helpers
+     * @summary Return the start of a day for the given date.
+     *
+     * @description
+     * Return the start of a day for the given date.
+     * The result will be in the local timezone.
+     *
+     * ### v2.0.0 breaking changes:
+     *
+     * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+     *
+     * @param {Date|Number} date - the original date
+     * @returns {Date} the start of a day
+     * @throws {TypeError} 1 argument required
+     *
+     * @example
+     * // The start of a day for 2 September 2014 11:55:00:
+     * var result = startOfDay(new Date(2014, 8, 2, 11, 55, 0))
+     * //=> Tue Sep 02 2014 00:00:00
+     */
+
+    function startOfDay(dirtyDate) {
+      requiredArgs(1, arguments);
+      var date = toDate(dirtyDate);
+      date.setHours(0, 0, 0, 0);
+      return date;
+    }
+
+    var MILLISECONDS_IN_DAY = 86400000;
+    /**
+     * @name differenceInCalendarDays
+     * @category Day Helpers
+     * @summary Get the number of calendar days between the given dates.
+     *
+     * @description
+     * Get the number of calendar days between the given dates. This means that the times are removed
+     * from the dates and then the difference in days is calculated.
+     *
+     * ### v2.0.0 breaking changes:
+     *
+     * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+     *
+     * @param {Date|Number} dateLeft - the later date
+     * @param {Date|Number} dateRight - the earlier date
+     * @returns {Number} the number of calendar days
+     * @throws {TypeError} 2 arguments required
+     *
+     * @example
+     * // How many calendar days are between
+     * // 2 July 2011 23:00:00 and 2 July 2012 00:00:00?
+     * var result = differenceInCalendarDays(
+     *   new Date(2012, 6, 2, 0, 0),
+     *   new Date(2011, 6, 2, 23, 0)
+     * )
+     * //=> 366
+     * // How many calendar days are between
+     * // 2 July 2011 23:59:00 and 3 July 2011 00:01:00?
+     * var result = differenceInCalendarDays(
+     *   new Date(2011, 6, 3, 0, 1),
+     *   new Date(2011, 6, 2, 23, 59)
+     * )
+     * //=> 1
+     */
+
+    function differenceInCalendarDays(dirtyDateLeft, dirtyDateRight) {
+      requiredArgs(2, arguments);
+      var startOfDayLeft = startOfDay(dirtyDateLeft);
+      var startOfDayRight = startOfDay(dirtyDateRight);
+      var timestampLeft = startOfDayLeft.getTime() - getTimezoneOffsetInMilliseconds(startOfDayLeft);
+      var timestampRight = startOfDayRight.getTime() - getTimezoneOffsetInMilliseconds(startOfDayRight); // Round the number of days to the nearest integer
+      // because the number of milliseconds in a day is not constant
+      // (e.g. it's different in the day of the daylight saving time clock shift)
+
+      return Math.round((timestampLeft - timestampRight) / MILLISECONDS_IN_DAY);
+    }
+
+    /**
      * @name isValid
      * @category Common Helpers
      * @summary Is the given date valid?
@@ -694,6 +806,36 @@ var app = (function () {
     }
 
     /**
+     * @name isSameDay
+     * @category Day Helpers
+     * @summary Are the given dates in the same day?
+     *
+     * @description
+     * Are the given dates in the same day?
+     *
+     * ### v2.0.0 breaking changes:
+     *
+     * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+     *
+     * @param {Date|Number} dateLeft - the first date to check
+     * @param {Date|Number} dateRight - the second date to check
+     * @returns {Boolean} the dates are in the same day
+     * @throws {TypeError} 2 arguments required
+     *
+     * @example
+     * // Are 4 September 06:00:00 and 4 September 18:00:00 in the same day?
+     * var result = isSameDay(new Date(2014, 8, 4, 6, 0), new Date(2014, 8, 4, 18, 0))
+     * //=> true
+     */
+
+    function isSameDay(dirtyDateLeft, dirtyDateRight) {
+      requiredArgs(2, arguments);
+      var dateLeftStartOfDay = startOfDay(dirtyDateLeft);
+      var dateRightStartOfDay = startOfDay(dirtyDateRight);
+      return dateLeftStartOfDay.getTime() === dateRightStartOfDay.getTime();
+    }
+
+    /**
      * @name startOfMonth
      * @category Month Helpers
      * @summary Return the start of a month for the given date.
@@ -720,6 +862,70 @@ var app = (function () {
       requiredArgs(1, arguments);
       var date = toDate(dirtyDate);
       date.setDate(1);
+      date.setHours(0, 0, 0, 0);
+      return date;
+    }
+
+    /**
+     * @name endOfMonth
+     * @category Month Helpers
+     * @summary Return the end of a month for the given date.
+     *
+     * @description
+     * Return the end of a month for the given date.
+     * The result will be in the local timezone.
+     *
+     * ### v2.0.0 breaking changes:
+     *
+     * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+     *
+     * @param {Date|Number} date - the original date
+     * @returns {Date} the end of a month
+     * @throws {TypeError} 1 argument required
+     *
+     * @example
+     * // The end of a month for 2 September 2014 11:55:00:
+     * var result = endOfMonth(new Date(2014, 8, 2, 11, 55, 0))
+     * //=> Tue Sep 30 2014 23:59:59.999
+     */
+
+    function endOfMonth(dirtyDate) {
+      requiredArgs(1, arguments);
+      var date = toDate(dirtyDate);
+      var month = date.getMonth();
+      date.setFullYear(date.getFullYear(), month + 1, 0);
+      date.setHours(23, 59, 59, 999);
+      return date;
+    }
+
+    /**
+     * @name startOfYear
+     * @category Year Helpers
+     * @summary Return the start of a year for the given date.
+     *
+     * @description
+     * Return the start of a year for the given date.
+     * The result will be in the local timezone.
+     *
+     * ### v2.0.0 breaking changes:
+     *
+     * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+     *
+     * @param {Date|Number} date - the original date
+     * @returns {Date} the start of a year
+     * @throws {TypeError} 1 argument required
+     *
+     * @example
+     * // The start of a year for 2 September 2014 11:55:00:
+     * var result = startOfYear(new Date(2014, 8, 2, 11, 55, 00))
+     * //=> Wed Jan 01 2014 00:00:00
+     */
+
+    function startOfYear(dirtyDate) {
+      requiredArgs(1, arguments);
+      var cleanDate = toDate(dirtyDate);
+      var date = new Date(0);
+      date.setFullYear(cleanDate.getFullYear(), 0, 1);
       date.setHours(0, 0, 0, 0);
       return date;
     }
@@ -1346,7 +1552,7 @@ var app = (function () {
       }
     };
 
-    var MILLISECONDS_IN_DAY = 86400000; // This function will be a part of public API when UTC function will be implemented.
+    var MILLISECONDS_IN_DAY$1 = 86400000; // This function will be a part of public API when UTC function will be implemented.
     // See issue: https://github.com/date-fns/date-fns/issues/376
 
     function getUTCDayOfYear(dirtyDate) {
@@ -1357,7 +1563,7 @@ var app = (function () {
       date.setUTCHours(0, 0, 0, 0);
       var startOfYearTimestamp = date.getTime();
       var difference = timestamp - startOfYearTimestamp;
-      return Math.floor(difference / MILLISECONDS_IN_DAY) + 1;
+      return Math.floor(difference / MILLISECONDS_IN_DAY$1) + 1;
     }
 
     // See issue: https://github.com/date-fns/date-fns/issues/376
@@ -2895,6 +3101,35 @@ var app = (function () {
     }
 
     /**
+     * @name getDate
+     * @category Day Helpers
+     * @summary Get the day of the month of the given date.
+     *
+     * @description
+     * Get the day of the month of the given date.
+     *
+     * ### v2.0.0 breaking changes:
+     *
+     * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+     *
+     * @param {Date|Number} date - the given date
+     * @returns {Number} the day of month
+     * @throws {TypeError} 1 argument required
+     *
+     * @example
+     * // Which day of the month is 29 February 2012?
+     * var result = getDate(new Date(2012, 1, 29))
+     * //=> 29
+     */
+
+    function getDate(dirtyDate) {
+      requiredArgs(1, arguments);
+      var date = toDate(dirtyDate);
+      var dayOfMonth = date.getDate();
+      return dayOfMonth;
+    }
+
+    /**
      * @name getDay
      * @category Weekday Helpers
      * @summary Get the day of the week of the given date.
@@ -2921,6 +3156,96 @@ var app = (function () {
       var date = toDate(dirtyDate);
       var day = date.getDay();
       return day;
+    }
+
+    /**
+     * @name getDayOfYear
+     * @category Day Helpers
+     * @summary Get the day of the year of the given date.
+     *
+     * @description
+     * Get the day of the year of the given date.
+     *
+     * ### v2.0.0 breaking changes:
+     *
+     * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+     *
+     * @param {Date|Number} date - the given date
+     * @returns {Number} the day of year
+     * @throws {TypeError} 1 argument required
+     *
+     * @example
+     * // Which day of the year is 2 July 2014?
+     * var result = getDayOfYear(new Date(2014, 6, 2))
+     * //=> 183
+     */
+
+    function getDayOfYear(dirtyDate) {
+      requiredArgs(1, arguments);
+      var date = toDate(dirtyDate);
+      var diff = differenceInCalendarDays(date, startOfYear(date));
+      var dayOfYear = diff + 1;
+      return dayOfYear;
+    }
+
+    /**
+     * @name isToday
+     * @category Day Helpers
+     * @summary Is the given date today?
+     * @pure false
+     *
+     * @description
+     * Is the given date today?
+     *
+     * > ⚠️ Please note that this function is not present in the FP submodule as
+     * > it uses `Date.now()` internally hence impure and can't be safely curried.
+     *
+     * ### v2.0.0 breaking changes:
+     *
+     * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+     *
+     * @param {Date|Number} date - the date to check
+     * @returns {Boolean} the date is today
+     * @throws {TypeError} 1 argument required
+     *
+     * @example
+     * // If today is 6 October 2014, is 6 October 14:00:00 today?
+     * var result = isToday(new Date(2014, 9, 6, 14, 0))
+     * //=> true
+     */
+
+    function isToday(dirtyDate) {
+      requiredArgs(1, arguments);
+      return isSameDay(dirtyDate, Date.now());
+    }
+
+    /**
+     * @name subDays
+     * @category Day Helpers
+     * @summary Subtract the specified number of days from the given date.
+     *
+     * @description
+     * Subtract the specified number of days from the given date.
+     *
+     * ### v2.0.0 breaking changes:
+     *
+     * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+     *
+     * @param {Date|Number} date - the date to be changed
+     * @param {Number} amount - the amount of days to be subtracted. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
+     * @returns {Date} the new date with the days subtracted
+     * @throws {TypeError} 2 arguments required
+     *
+     * @example
+     * // Subtract 10 days from 1 September 2014:
+     * var result = subDays(new Date(2014, 8, 1), 10)
+     * //=> Fri Aug 22 2014 00:00:00
+     */
+
+    function subDays(dirtyDate, dirtyAmount) {
+      requiredArgs(2, arguments);
+      var amount = toInteger(dirtyAmount);
+      return addDays(dirtyDate, -amount);
     }
 
     /**
@@ -2952,8 +3277,334 @@ var app = (function () {
       return addMonths(dirtyDate, -amount);
     }
 
+    /* node_modules/svelte-material-icons/ChevronLeft.svelte generated by Svelte v3.21.0 */
+
+    const file$1 = "node_modules/svelte-material-icons/ChevronLeft.svelte";
+
+    function create_fragment$1(ctx) {
+    	let svg;
+    	let path;
+
+    	const block = {
+    		c: function create() {
+    			svg = svg_element("svg");
+    			path = svg_element("path");
+    			attr_dev(path, "d", "M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z");
+    			attr_dev(path, "fill", /*color*/ ctx[2]);
+    			add_location(path, file$1, 8, 59, 234);
+    			attr_dev(svg, "width", /*width*/ ctx[0]);
+    			attr_dev(svg, "height", /*height*/ ctx[1]);
+    			attr_dev(svg, "viewBox", /*viewBox*/ ctx[3]);
+    			add_location(svg, file$1, 8, 0, 175);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, svg, anchor);
+    			append_dev(svg, path);
+    		},
+    		p: function update(ctx, [dirty]) {
+    			if (dirty & /*color*/ 4) {
+    				attr_dev(path, "fill", /*color*/ ctx[2]);
+    			}
+
+    			if (dirty & /*width*/ 1) {
+    				attr_dev(svg, "width", /*width*/ ctx[0]);
+    			}
+
+    			if (dirty & /*height*/ 2) {
+    				attr_dev(svg, "height", /*height*/ ctx[1]);
+    			}
+
+    			if (dirty & /*viewBox*/ 8) {
+    				attr_dev(svg, "viewBox", /*viewBox*/ ctx[3]);
+    			}
+    		},
+    		i: noop,
+    		o: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(svg);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$1.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function instance$1($$self, $$props, $$invalidate) {
+    	let { size = "1em" } = $$props;
+    	let { width = size } = $$props;
+    	let { height = size } = $$props;
+    	let { color = "currentColor" } = $$props;
+    	let { viewBox = "0 0 24 24" } = $$props;
+    	const writable_props = ["size", "width", "height", "color", "viewBox"];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<ChevronLeft> was created with unknown prop '${key}'`);
+    	});
+
+    	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("ChevronLeft", $$slots, []);
+
+    	$$self.$set = $$props => {
+    		if ("size" in $$props) $$invalidate(4, size = $$props.size);
+    		if ("width" in $$props) $$invalidate(0, width = $$props.width);
+    		if ("height" in $$props) $$invalidate(1, height = $$props.height);
+    		if ("color" in $$props) $$invalidate(2, color = $$props.color);
+    		if ("viewBox" in $$props) $$invalidate(3, viewBox = $$props.viewBox);
+    	};
+
+    	$$self.$capture_state = () => ({ size, width, height, color, viewBox });
+
+    	$$self.$inject_state = $$props => {
+    		if ("size" in $$props) $$invalidate(4, size = $$props.size);
+    		if ("width" in $$props) $$invalidate(0, width = $$props.width);
+    		if ("height" in $$props) $$invalidate(1, height = $$props.height);
+    		if ("color" in $$props) $$invalidate(2, color = $$props.color);
+    		if ("viewBox" in $$props) $$invalidate(3, viewBox = $$props.viewBox);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	return [width, height, color, viewBox, size];
+    }
+
+    class ChevronLeft extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+
+    		init(this, options, instance$1, create_fragment$1, safe_not_equal, {
+    			size: 4,
+    			width: 0,
+    			height: 1,
+    			color: 2,
+    			viewBox: 3
+    		});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "ChevronLeft",
+    			options,
+    			id: create_fragment$1.name
+    		});
+    	}
+
+    	get size() {
+    		throw new Error("<ChevronLeft>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set size(value) {
+    		throw new Error("<ChevronLeft>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get width() {
+    		throw new Error("<ChevronLeft>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set width(value) {
+    		throw new Error("<ChevronLeft>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get height() {
+    		throw new Error("<ChevronLeft>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set height(value) {
+    		throw new Error("<ChevronLeft>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get color() {
+    		throw new Error("<ChevronLeft>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set color(value) {
+    		throw new Error("<ChevronLeft>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get viewBox() {
+    		throw new Error("<ChevronLeft>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set viewBox(value) {
+    		throw new Error("<ChevronLeft>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* node_modules/svelte-material-icons/ChevronRight.svelte generated by Svelte v3.21.0 */
+
+    const file$2 = "node_modules/svelte-material-icons/ChevronRight.svelte";
+
+    function create_fragment$2(ctx) {
+    	let svg;
+    	let path;
+
+    	const block = {
+    		c: function create() {
+    			svg = svg_element("svg");
+    			path = svg_element("path");
+    			attr_dev(path, "d", "M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z");
+    			attr_dev(path, "fill", /*color*/ ctx[2]);
+    			add_location(path, file$2, 8, 59, 234);
+    			attr_dev(svg, "width", /*width*/ ctx[0]);
+    			attr_dev(svg, "height", /*height*/ ctx[1]);
+    			attr_dev(svg, "viewBox", /*viewBox*/ ctx[3]);
+    			add_location(svg, file$2, 8, 0, 175);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, svg, anchor);
+    			append_dev(svg, path);
+    		},
+    		p: function update(ctx, [dirty]) {
+    			if (dirty & /*color*/ 4) {
+    				attr_dev(path, "fill", /*color*/ ctx[2]);
+    			}
+
+    			if (dirty & /*width*/ 1) {
+    				attr_dev(svg, "width", /*width*/ ctx[0]);
+    			}
+
+    			if (dirty & /*height*/ 2) {
+    				attr_dev(svg, "height", /*height*/ ctx[1]);
+    			}
+
+    			if (dirty & /*viewBox*/ 8) {
+    				attr_dev(svg, "viewBox", /*viewBox*/ ctx[3]);
+    			}
+    		},
+    		i: noop,
+    		o: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(svg);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$2.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function instance$2($$self, $$props, $$invalidate) {
+    	let { size = "1em" } = $$props;
+    	let { width = size } = $$props;
+    	let { height = size } = $$props;
+    	let { color = "currentColor" } = $$props;
+    	let { viewBox = "0 0 24 24" } = $$props;
+    	const writable_props = ["size", "width", "height", "color", "viewBox"];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<ChevronRight> was created with unknown prop '${key}'`);
+    	});
+
+    	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("ChevronRight", $$slots, []);
+
+    	$$self.$set = $$props => {
+    		if ("size" in $$props) $$invalidate(4, size = $$props.size);
+    		if ("width" in $$props) $$invalidate(0, width = $$props.width);
+    		if ("height" in $$props) $$invalidate(1, height = $$props.height);
+    		if ("color" in $$props) $$invalidate(2, color = $$props.color);
+    		if ("viewBox" in $$props) $$invalidate(3, viewBox = $$props.viewBox);
+    	};
+
+    	$$self.$capture_state = () => ({ size, width, height, color, viewBox });
+
+    	$$self.$inject_state = $$props => {
+    		if ("size" in $$props) $$invalidate(4, size = $$props.size);
+    		if ("width" in $$props) $$invalidate(0, width = $$props.width);
+    		if ("height" in $$props) $$invalidate(1, height = $$props.height);
+    		if ("color" in $$props) $$invalidate(2, color = $$props.color);
+    		if ("viewBox" in $$props) $$invalidate(3, viewBox = $$props.viewBox);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	return [width, height, color, viewBox, size];
+    }
+
+    class ChevronRight extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+
+    		init(this, options, instance$2, create_fragment$2, safe_not_equal, {
+    			size: 4,
+    			width: 0,
+    			height: 1,
+    			color: 2,
+    			viewBox: 3
+    		});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "ChevronRight",
+    			options,
+    			id: create_fragment$2.name
+    		});
+    	}
+
+    	get size() {
+    		throw new Error("<ChevronRight>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set size(value) {
+    		throw new Error("<ChevronRight>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get width() {
+    		throw new Error("<ChevronRight>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set width(value) {
+    		throw new Error("<ChevronRight>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get height() {
+    		throw new Error("<ChevronRight>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set height(value) {
+    		throw new Error("<ChevronRight>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get color() {
+    		throw new Error("<ChevronRight>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set color(value) {
+    		throw new Error("<ChevronRight>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get viewBox() {
+    		throw new Error("<ChevronRight>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set viewBox(value) {
+    		throw new Error("<ChevronRight>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
     /* src/mini-components/calender.svelte generated by Svelte v3.21.0 */
-    const file$1 = "src/mini-components/calender.svelte";
+    const file$3 = "src/mini-components/calender.svelte";
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
@@ -2969,18 +3620,18 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (13:8) {#each weekdays as weekday, i}
+    // (18:12) {#each weekdays as weekday, i}
     function create_each_block_1(ctx) {
     	let div;
-    	let t_value = /*weekday*/ ctx[8] + "";
+    	let t_value = /*weekday*/ ctx[8][0] + "";
     	let t;
 
     	const block = {
     		c: function create() {
     			div = element("div");
     			t = text(t_value);
-    			attr_dev(div, "class", "item svelte-1xvgo42");
-    			add_location(div, file$1, 13, 12, 484);
+    			attr_dev(div, "class", "item svelte-195o6o4");
+    			add_location(div, file$3, 18, 16, 681);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -2996,22 +3647,22 @@ var app = (function () {
     		block,
     		id: create_each_block_1.name,
     		type: "each",
-    		source: "(13:8) {#each weekdays as weekday, i}",
+    		source: "(18:12) {#each weekdays as weekday, i}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (23:16) {#if ((i + 1) % 7 == 0)}
+    // (29:16) {#if ((i + 1) % 7 == 0)}
     function create_if_block(ctx) {
     	let div;
 
     	const block = {
     		c: function create() {
     			div = element("div");
-    			attr_dev(div, "class", "break svelte-1xvgo42");
-    			add_location(div, file$1, 23, 20, 830);
+    			attr_dev(div, "class", "break svelte-195o6o4");
+    			add_location(div, file$3, 29, 20, 1150);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -3025,18 +3676,19 @@ var app = (function () {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(23:16) {#if ((i + 1) % 7 == 0)}",
+    		source: "(29:16) {#if ((i + 1) % 7 == 0)}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (20:12) {#each calendarData.singleDays as singleDay, i}
+    // (26:12) {#each calendarData.singleDays as singleDay, i}
     function create_each_block(ctx) {
     	let div;
     	let t0_value = /*singleDay*/ ctx[5].dateFormate + "";
     	let t0;
+    	let div_class_value;
     	let t1;
     	let if_block_anchor;
     	let if_block = (/*i*/ ctx[7] + 1) % 7 == 0 && create_if_block(ctx);
@@ -3048,8 +3700,8 @@ var app = (function () {
     			t1 = space();
     			if (if_block) if_block.c();
     			if_block_anchor = empty();
-    			attr_dev(div, "class", "item svelte-1xvgo42");
-    			add_location(div, file$1, 20, 16, 717);
+    			attr_dev(div, "class", div_class_value = "item item-days " + (/*singleDay*/ ctx[5].isActiveDay ? "active-month" : "") + " " + (/*singleDay*/ ctx[5].isToday ? "active-day" : "") + " svelte-195o6o4");
+    			add_location(div, file$3, 26, 16, 936);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -3060,6 +3712,10 @@ var app = (function () {
     		},
     		p: function update(ctx, dirty) {
     			if (dirty & /*calendarData*/ 1 && t0_value !== (t0_value = /*singleDay*/ ctx[5].dateFormate + "")) set_data_dev(t0, t0_value);
+
+    			if (dirty & /*calendarData*/ 1 && div_class_value !== (div_class_value = "item item-days " + (/*singleDay*/ ctx[5].isActiveDay ? "active-month" : "") + " " + (/*singleDay*/ ctx[5].isToday ? "active-day" : "") + " svelte-195o6o4")) {
+    				attr_dev(div, "class", div_class_value);
+    			}
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div);
@@ -3073,15 +3729,15 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(20:12) {#each calendarData.singleDays as singleDay, i}",
+    		source: "(26:12) {#each calendarData.singleDays as singleDay, i}",
     		ctx
     	});
 
     	return block;
     }
 
-    function create_fragment$1(ctx) {
-    	let div6;
+    function create_fragment$3(ctx) {
+    	let div7;
     	let div2;
     	let div0;
     	let span0;
@@ -3090,14 +3746,18 @@ var app = (function () {
     	let t1;
     	let div1;
     	let span1;
-    	let t3;
+    	let t2;
     	let span2;
-    	let t5;
-    	let div3;
-    	let t6;
-    	let div5;
+    	let t3;
     	let div4;
+    	let div3;
+    	let t4;
+    	let div6;
+    	let div5;
+    	let current;
     	let dispose;
+    	const chevronleft = new ChevronLeft({ $$inline: true });
+    	const chevronright = new ChevronRight({ $$inline: true });
     	let each_value_1 = /*weekdays*/ ctx[1];
     	validate_each_argument(each_value_1);
     	let each_blocks_1 = [];
@@ -3116,7 +3776,7 @@ var app = (function () {
 
     	const block = {
     		c: function create() {
-    			div6 = element("div");
+    			div7 = element("div");
     			div2 = element("div");
     			div0 = element("div");
     			span0 = element("span");
@@ -3124,72 +3784,81 @@ var app = (function () {
     			t1 = space();
     			div1 = element("div");
     			span1 = element("span");
-    			span1.textContent = "Prev";
-    			t3 = space();
+    			create_component(chevronleft.$$.fragment);
+    			t2 = space();
     			span2 = element("span");
-    			span2.textContent = "Next";
-    			t5 = space();
+    			create_component(chevronright.$$.fragment);
+    			t3 = space();
+    			div4 = element("div");
     			div3 = element("div");
 
     			for (let i = 0; i < each_blocks_1.length; i += 1) {
     				each_blocks_1[i].c();
     			}
 
-    			t6 = space();
+    			t4 = space();
+    			div6 = element("div");
     			div5 = element("div");
-    			div4 = element("div");
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
 
-    			add_location(span0, file$1, 3, 12, 133);
-    			attr_dev(div0, "class", "s-cal-month-year svelte-1xvgo42");
-    			add_location(div0, file$1, 2, 8, 90);
-    			add_location(span1, file$1, 6, 12, 255);
-    			add_location(span2, file$1, 7, 12, 319);
-    			attr_dev(div1, "class", "s-cal-nxt-prv-actions svelte-1xvgo42");
-    			add_location(div1, file$1, 5, 8, 207);
-    			attr_dev(div2, "class", "c-flex s-calendar-month-directions svelte-1xvgo42");
-    			add_location(div2, file$1, 1, 4, 33);
-    			attr_dev(div3, "class", "c-flex s-calendar-header");
-    			add_location(div3, file$1, 11, 4, 394);
-    			attr_dev(div4, "class", "days-container-holder svelte-1xvgo42");
-    			add_location(div4, file$1, 18, 8, 605);
-    			attr_dev(div5, "class", "c-flex s-calendar-days-holder");
-    			add_location(div5, file$1, 17, 4, 553);
-    			attr_dev(div6, "class", "small-calendar");
-    			add_location(div6, file$1, 0, 0, 0);
+    			add_location(span0, file$3, 3, 12, 133);
+    			attr_dev(div0, "class", "s-cal-month-year svelte-195o6o4");
+    			add_location(div0, file$3, 2, 8, 90);
+    			attr_dev(span1, "class", "s-cal-single-actions svelte-195o6o4");
+    			add_location(span1, file$3, 6, 12, 255);
+    			attr_dev(span2, "class", "s-cal-single-actions svelte-195o6o4");
+    			add_location(span2, file$3, 9, 12, 389);
+    			attr_dev(div1, "class", "s-cal-nxt-prv-actions svelte-195o6o4");
+    			add_location(div1, file$3, 5, 8, 207);
+    			attr_dev(div2, "class", "c-flex s-calendar-month-directions svelte-195o6o4");
+    			add_location(div2, file$3, 1, 4, 33);
+    			attr_dev(div3, "class", "weekdays-container-holder svelte-195o6o4");
+    			add_location(div3, file$3, 16, 8, 582);
+    			attr_dev(div4, "class", "c-flex s-calendar-header");
+    			add_location(div4, file$3, 15, 4, 535);
+    			attr_dev(div5, "class", "days-container-holder svelte-195o6o4");
+    			add_location(div5, file$3, 24, 8, 824);
+    			attr_dev(div6, "class", "c-flex s-calendar-days-holder");
+    			add_location(div6, file$3, 23, 4, 772);
+    			attr_dev(div7, "class", "small-calendar svelte-195o6o4");
+    			add_location(div7, file$3, 0, 0, 0);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor, remount) {
-    			insert_dev(target, div6, anchor);
-    			append_dev(div6, div2);
+    			insert_dev(target, div7, anchor);
+    			append_dev(div7, div2);
     			append_dev(div2, div0);
     			append_dev(div0, span0);
     			append_dev(span0, t0);
     			append_dev(div2, t1);
     			append_dev(div2, div1);
     			append_dev(div1, span1);
-    			append_dev(div1, t3);
+    			mount_component(chevronleft, span1, null);
+    			append_dev(div1, t2);
     			append_dev(div1, span2);
-    			append_dev(div6, t5);
-    			append_dev(div6, div3);
+    			mount_component(chevronright, span2, null);
+    			append_dev(div7, t3);
+    			append_dev(div7, div4);
+    			append_dev(div4, div3);
 
     			for (let i = 0; i < each_blocks_1.length; i += 1) {
     				each_blocks_1[i].m(div3, null);
     			}
 
-    			append_dev(div6, t6);
+    			append_dev(div7, t4);
+    			append_dev(div7, div6);
     			append_dev(div6, div5);
-    			append_dev(div5, div4);
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(div4, null);
+    				each_blocks[i].m(div5, null);
     			}
 
+    			current = true;
     			if (remount) run_all(dispose);
 
     			dispose = [
@@ -3198,7 +3867,7 @@ var app = (function () {
     			];
     		},
     		p: function update(ctx, [dirty]) {
-    			if (dirty & /*calendarData*/ 1 && t0_value !== (t0_value = /*calendarData*/ ctx[0].selectedMonth.formated + "")) set_data_dev(t0, t0_value);
+    			if ((!current || dirty & /*calendarData*/ 1) && t0_value !== (t0_value = /*calendarData*/ ctx[0].selectedMonth.formated + "")) set_data_dev(t0, t0_value);
 
     			if (dirty & /*weekdays*/ 2) {
     				each_value_1 = /*weekdays*/ ctx[1];
@@ -3237,7 +3906,7 @@ var app = (function () {
     					} else {
     						each_blocks[i] = create_each_block(child_ctx);
     						each_blocks[i].c();
-    						each_blocks[i].m(div4, null);
+    						each_blocks[i].m(div5, null);
     					}
     				}
 
@@ -3248,10 +3917,21 @@ var app = (function () {
     				each_blocks.length = each_value.length;
     			}
     		},
-    		i: noop,
-    		o: noop,
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(chevronleft.$$.fragment, local);
+    			transition_in(chevronright.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(chevronleft.$$.fragment, local);
+    			transition_out(chevronright.$$.fragment, local);
+    			current = false;
+    		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div6);
+    			if (detaching) detach_dev(div7);
+    			destroy_component(chevronleft);
+    			destroy_component(chevronright);
     			destroy_each(each_blocks_1, detaching);
     			destroy_each(each_blocks, detaching);
     			run_all(dispose);
@@ -3260,7 +3940,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$1.name,
+    		id: create_fragment$3.name,
     		type: "component",
     		source: "",
     		ctx
@@ -3272,13 +3952,14 @@ var app = (function () {
     function singleDataObj(obj) {
     	this.date = obj.date || "";
     	this.dateFormate = obj.dateFormate || 0;
-    	this.weekDay = obj.weekDay || "";
     	this.dayInMonth = obj.dayInMonth || 0;
     	this.dayInWeek = obj.dayInWeek || 0;
     	this.dayInYear = obj.dayInYear || 0;
+    	this.isToday = obj.isToday || false;
+    	this.isActiveDay = obj.isActiveDay || false;
     }
 
-    function instance$1($$self, $$props, $$invalidate) {
+    function instance$3($$self, $$props, $$invalidate) {
     	const weekdays = [...Array(7).keys()].map(i => locale.localize.day(i, { width: "abbreviated" }));
 
     	let calendarData = {
@@ -3295,14 +3976,42 @@ var app = (function () {
     		$$invalidate(0, calendarData.selectedMonth.formated = format(calendarData.selectedMonth.dateObj, "MMMM yyyy"), calendarData);
     		$$invalidate(0, calendarData.singleDays = [], calendarData);
     		var count = 1;
+    		var EndStartMonthCount = 0;
+    		var currentWeekDayNo = getDay(calendarData.selectedMonth.dateObj);
+    		var getStartOfCurrentMonth = startOfMonth(calendarData.selectedMonth.dateObj);
+    		var getMonthStartWeekDayNo = getDay(getStartOfCurrentMonth);
 
-    		for (var i = 1; i <= calendarData.totalBoxesToBeCreated; i++) {
-    			var currentWeekDayNo = getDay(calendarData.selectedMonth.dateObj);
+    		for (var i = 0; i < calendarData.totalBoxesToBeCreated; i++) {
     			var dayObj = new singleDataObj({});
 
-    			if (i >= currentWeekDayNo && count <= calendarData.totalNumberOfDaysInSelectedMonth) {
+    			if (i >= getMonthStartWeekDayNo && count <= calendarData.totalNumberOfDaysInSelectedMonth) {
     				dayObj.dateFormate = count;
+    				dayObj.date = addDays(getStartOfCurrentMonth, count - 1);
+    				dayObj.dayInMonth = getDate(dayObj.date);
+    				dayObj.dayInWeek = getDay(dayObj.date);
+    				dayObj.dayInYear = getDayOfYear(dayObj.date);
+    				dayObj.isToday = isToday(dayObj.date);
+    				dayObj.isActiveDay = true;
     				count = count + 1;
+    			} else {
+    				if (i <= getMonthStartWeekDayNo) {
+    					var prevMonthEndDay = endOfMonth(subMonths(getStartOfCurrentMonth, 1));
+    					dayObj.date = subDays(prevMonthEndDay, getMonthStartWeekDayNo - (i + 1));
+    					dayObj.dateFormate = format(dayObj.date, "d");
+    					dayObj.dayInMonth = getDate(dayObj.date);
+    					dayObj.dayInWeek = getDay(dayObj.date);
+    					dayObj.dayInYear = getDayOfYear(dayObj.date);
+    					dayObj.isToday = isToday(dayObj.date);
+    				} else {
+    					var nextMonthStartDay = startOfMonth(addMonths(getStartOfCurrentMonth, 1));
+    					dayObj.date = addDays(nextMonthStartDay, EndStartMonthCount);
+    					dayObj.dateFormate = format(dayObj.date, "d");
+    					dayObj.dayInMonth = getDate(dayObj.date);
+    					dayObj.dayInWeek = getDay(dayObj.date);
+    					dayObj.dayInYear = getDayOfYear(dayObj.date);
+    					dayObj.isToday = isToday(dayObj.date);
+    					EndStartMonthCount = EndStartMonthCount + 1;
+    				}
     			}
 
     			calendarData.singleDays.push(dayObj);
@@ -3338,7 +4047,15 @@ var app = (function () {
     		addMonths,
     		startOfMonth,
     		subMonths,
+    		isToday,
+    		addDays,
+    		subDays,
+    		getDate,
+    		getDayOfYear,
+    		endOfMonth,
     		locale,
+    		ChevronLeft,
+    		ChevronRight,
     		weekdays,
     		singleDataObj,
     		calendarData,
@@ -3361,38 +4078,43 @@ var app = (function () {
     class Calender extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$1, create_fragment$1, safe_not_equal, {});
+    		init(this, options, instance$3, create_fragment$3, safe_not_equal, {});
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "Calender",
     			options,
-    			id: create_fragment$1.name
+    			id: create_fragment$3.name
     		});
     	}
     }
 
     /* src/side-nav/side.nav.svelte generated by Svelte v3.21.0 */
-    const file$2 = "src/side-nav/side.nav.svelte";
+    const file$4 = "src/side-nav/side.nav.svelte";
 
-    function create_fragment$2(ctx) {
-    	let div;
+    function create_fragment$4(ctx) {
+    	let div1;
+    	let div0;
     	let current;
     	const calendermini = new Calender({ $$inline: true });
 
     	const block = {
     		c: function create() {
-    			div = element("div");
+    			div1 = element("div");
+    			div0 = element("div");
     			create_component(calendermini.$$.fragment);
-    			attr_dev(div, "class", "c-flex c-flex-column full-height g-side-navigation svelte-15ptkaa");
-    			add_location(div, file$2, 0, 0, 0);
+    			attr_dev(div0, "class", "side-bar-contents");
+    			add_location(div0, file$4, 1, 4, 69);
+    			attr_dev(div1, "class", "c-flex c-flex-column full-height g-side-navigation svelte-1ex8waa");
+    			add_location(div1, file$4, 0, 0, 0);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			mount_component(calendermini, div, null);
+    			insert_dev(target, div1, anchor);
+    			append_dev(div1, div0);
+    			mount_component(calendermini, div0, null);
     			current = true;
     		},
     		p: noop,
@@ -3406,14 +4128,14 @@ var app = (function () {
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
+    			if (detaching) detach_dev(div1);
     			destroy_component(calendermini);
     		}
     	};
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$2.name,
+    		id: create_fragment$4.name,
     		type: "component",
     		source: "",
     		ctx
@@ -3422,7 +4144,7 @@ var app = (function () {
     	return block;
     }
 
-    function instance$2($$self, $$props, $$invalidate) {
+    function instance$4($$self, $$props, $$invalidate) {
     	const writable_props = [];
 
     	Object.keys($$props).forEach(key => {
@@ -3438,22 +4160,22 @@ var app = (function () {
     class Side_nav extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$2, create_fragment$2, safe_not_equal, {});
+    		init(this, options, instance$4, create_fragment$4, safe_not_equal, {});
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "Side_nav",
     			options,
-    			id: create_fragment$2.name
+    			id: create_fragment$4.name
     		});
     	}
     }
 
     /* src/main-calendar/calender.svelte generated by Svelte v3.21.0 */
 
-    const file$3 = "src/main-calendar/calender.svelte";
+    const file$5 = "src/main-calendar/calender.svelte";
 
-    function create_fragment$3(ctx) {
+    function create_fragment$5(ctx) {
     	let div;
 
     	const block = {
@@ -3461,7 +4183,7 @@ var app = (function () {
     			div = element("div");
     			div.textContent = "I am calender";
     			attr_dev(div, "class", "c-flex c-flex-column full-height g-main-calender-wrapper");
-    			add_location(div, file$3, 0, 0, 0);
+    			add_location(div, file$5, 0, 0, 0);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3479,7 +4201,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$3.name,
+    		id: create_fragment$5.name,
     		type: "component",
     		source: "",
     		ctx
@@ -3488,7 +4210,7 @@ var app = (function () {
     	return block;
     }
 
-    function instance$3($$self, $$props) {
+    function instance$5($$self, $$props) {
     	const writable_props = [];
 
     	Object.keys($$props).forEach(key => {
@@ -3503,21 +4225,21 @@ var app = (function () {
     class Calender$1 extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$3, create_fragment$3, safe_not_equal, {});
+    		init(this, options, instance$5, create_fragment$5, safe_not_equal, {});
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "Calender",
     			options,
-    			id: create_fragment$3.name
+    			id: create_fragment$5.name
     		});
     	}
     }
 
     /* src/App.svelte generated by Svelte v3.21.0 */
-    const file$4 = "src/App.svelte";
+    const file$6 = "src/App.svelte";
 
-    function create_fragment$4(ctx) {
+    function create_fragment$6(ctx) {
     	let div1;
     	let t0;
     	let div0;
@@ -3537,9 +4259,9 @@ var app = (function () {
     			t1 = space();
     			create_component(calender.$$.fragment);
     			attr_dev(div0, "class", "c-flex c-flex full-height");
-    			add_location(div0, file$4, 9, 1, 243);
+    			add_location(div0, file$6, 9, 1, 243);
     			attr_dev(div1, "class", "main-app c-flex c-flex-column full-height");
-    			add_location(div1, file$4, 6, 0, 173);
+    			add_location(div1, file$6, 6, 0, 173);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3578,7 +4300,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$4.name,
+    		id: create_fragment$6.name,
     		type: "component",
     		source: "",
     		ctx
@@ -3587,7 +4309,7 @@ var app = (function () {
     	return block;
     }
 
-    function instance$4($$self, $$props, $$invalidate) {
+    function instance$6($$self, $$props, $$invalidate) {
     	const writable_props = [];
 
     	Object.keys($$props).forEach(key => {
@@ -3603,13 +4325,13 @@ var app = (function () {
     class App extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$4, create_fragment$4, safe_not_equal, {});
+    		init(this, options, instance$6, create_fragment$6, safe_not_equal, {});
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "App",
     			options,
-    			id: create_fragment$4.name
+    			id: create_fragment$6.name
     		});
     	}
     }

@@ -1,5 +1,7 @@
 <div class="c-flex c-flex-column full-height g-side-navigation">
-    <CalenderMini />
+    <div class="side-bar-contents">
+        <CalenderMini />
+    </div>
 </div>
 
 <script>
@@ -9,5 +11,6 @@
 <style>
     .g-side-navigation {
         flex: 0 0 256px;
+        padding: 8px;
     }
 </style>

@@ -4,21 +4,27 @@
             <span>{calendarData.selectedMonth.formated}</span>
         </div>
         <div class="s-cal-nxt-prv-actions">
-            <span on:click={ getPrevMonth }>Prev</span>        
-            <span on:click={ getNextMonth }>Next</span>
+            <span class="s-cal-single-actions" on:click={ getPrevMonth }>
+                <ChevronLeft />
+            </span>        
+            <span on:click={ getNextMonth } class="s-cal-single-actions">
+                <ChevronRight />
+            </span>
         </div>
     </div>
 
     <div class="c-flex s-calendar-header">
-        {#each weekdays as weekday, i}
-            <div class="item" >{ weekday }</div>
-        {/each}
+        <div class="weekdays-container-holder">
+            {#each weekdays as weekday, i}
+                <div class="item" >{ weekday[0] }</div>
+            {/each}
+        </div>
     </div>
 
     <div class="c-flex s-calendar-days-holder">
         <div class="days-container-holder">
             {#each calendarData.singleDays as singleDay, i}
-                <div class="item" >{ singleDay.dateFormate }</div>
+                <div class="item item-days { singleDay.isActiveDay ? 'active-month' : '' } { singleDay.isToday ? 'active-day' : ''  }" >{ singleDay.dateFormate }</div>
 
                 {#if ((i + 1) % 7 == 0)}
                     <div class="break"></div>
@@ -29,17 +35,36 @@
 </div>
 
 <script>
-    import { getDay, format, getDaysInMonth, addMonths, startOfMonth, subMonths } from 'date-fns'
+    import { 
+        getDay, 
+        format, 
+        getDaysInMonth, 
+        addMonths, 
+        startOfMonth, 
+        subMonths, 
+        isToday,
+        addDays,
+        subDays,
+        getDate,
+        getDayOfYear,
+        endOfMonth
+    } from 'date-fns'
     import locale from 'date-fns/esm/locale/en-US'
+    import ChevronLeft from "svelte-material-icons/ChevronLeft.svelte";
+    import ChevronRight from "svelte-material-icons/ChevronRight.svelte";
+    
     const weekdays = [...Array(7).keys()].map(i => locale.localize.day(i, { width: 'abbreviated' }))
 
     function singleDataObj(obj) {
         this.date = obj.date || ''
         this.dateFormate = obj.dateFormate || 0
-        this.weekDay = obj.weekDay || ''
+
         this.dayInMonth = obj.dayInMonth || 0
         this.dayInWeek = obj.dayInWeek || 0
         this.dayInYear = obj.dayInYear || 0
+
+        this.isToday = obj.isToday || false
+        this.isActiveDay = obj.isActiveDay || false
     }
     
     let calendarData = {
@@ -63,14 +88,48 @@
         calendarData.singleDays = []
 
         var count = 1
-        for(var i = 1; i <= calendarData.totalBoxesToBeCreated; i++ ) {  
-            var currentWeekDayNo = getDay(calendarData.selectedMonth.dateObj)
+        var EndStartMonthCount = 0
+        var currentWeekDayNo = getDay(calendarData.selectedMonth.dateObj)
+        var getStartOfCurrentMonth  = startOfMonth(calendarData.selectedMonth.dateObj)
+        var getMonthStartWeekDayNo = getDay(getStartOfCurrentMonth)
+
+        for(var i = 0; i < calendarData.totalBoxesToBeCreated; i++ ) { 
+
             var dayObj = new singleDataObj({})
-            if(i >= currentWeekDayNo && count <= calendarData.totalNumberOfDaysInSelectedMonth) {
+            if(i >= getMonthStartWeekDayNo && count <= calendarData.totalNumberOfDaysInSelectedMonth) {
                 dayObj.dateFormate = count
+                dayObj.date = addDays(getStartOfCurrentMonth, count - 1)  
+
+                dayObj.dayInMonth = getDate(dayObj.date)
+                dayObj.dayInWeek = getDay(dayObj.date)   
+                dayObj.dayInYear = getDayOfYear(dayObj.date)
+
+                dayObj.isToday = isToday(dayObj.date)
+                dayObj.isActiveDay = true
                 count = count + 1 
             } else {
-                
+                if(i <= getMonthStartWeekDayNo) {
+                    var prevMonthEndDay = endOfMonth(subMonths(getStartOfCurrentMonth, 1))
+                    dayObj.date = subDays(prevMonthEndDay, getMonthStartWeekDayNo - (i + 1))  
+                    dayObj.dateFormate = format(dayObj.date, 'd')
+
+                    dayObj.dayInMonth = getDate(dayObj.date)
+                    dayObj.dayInWeek = getDay(dayObj.date)   
+                    dayObj.dayInYear = getDayOfYear(dayObj.date)
+
+                    dayObj.isToday = isToday(dayObj.date)
+                } else {
+                    var nextMonthStartDay = startOfMonth(addMonths(getStartOfCurrentMonth, 1))
+                    dayObj.date = addDays(nextMonthStartDay, EndStartMonthCount)  
+                    dayObj.dateFormate = format(dayObj.date, 'd')
+
+                    dayObj.dayInMonth = getDate(dayObj.date)
+                    dayObj.dayInWeek = getDay(dayObj.date)   
+                    dayObj.dayInYear = getDayOfYear(dayObj.date)
+
+                    dayObj.isToday = isToday(dayObj.date)
+                    EndStartMonthCount = EndStartMonthCount + 1
+                }
             }
 
             calendarData.singleDays.push(dayObj)
@@ -96,9 +155,43 @@
 </script>
 
 <style>
-    .days-container-holder {
+    .small-calendar {
+        padding: 16px
+    }
+
+    .days-container-holder, .weekdays-container-holder {
         display: flex;
         flex-wrap: wrap;
+        flex: 1;
+    }
+
+    .item {
+        display: flex;
+        flex: 0 0 14.28%;
+        justify-content: center;
+        font-size: 10px;
+        height: 29px;
+        padding: 7px;
+        color: #70757a;
+    }
+
+    .item-days {
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .item-days:hover {
+        background-color: #f6f6f6;
+    }
+
+    .item-days.active-month {
+        font-weight: 500;
+        color: #3c4043;
+    }
+
+    .item-days.active-day {
+        background-color: #1a73e8;
+        color: #fff;
     }
 
     .break {
@@ -106,22 +199,39 @@
         height: 0;
     }
 
-    .item {
-        display: flex;
-        flex: auto;
-        flex: 0 0 36px;
-        justify-content: center;
-    }
-
     .s-calendar-month-directions {
         justify-content: space-between;
     }
 
     .s-calendar-month-directions .s-cal-month-year {
-
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: .25px;
+        line-height: 20px;
+        color: #3c4043;
+        padding: 4px;
+        padding-left: 8px;
     }
 
     .s-calendar-month-directions .s-cal-nxt-prv-actions {
+        display: block;
+        overflow: hidden;
+    }
 
+    .s-calendar-month-directions .s-cal-nxt-prv-actions .s-cal-single-actions {
+        width: 29px;
+        height: 29px;
+        display: block;
+        text-align: center;
+        color: #3c4043;
+        border-radius: 50%;
+        cursor: pointer;
+        outline: 0;
+        float: left;
+        font-size: 17px;
+    }
+
+    .s-calendar-month-directions .s-cal-nxt-prv-actions .s-cal-single-actions:hover {
+        background-color: #f6f6f6;
     }
 </style>
