@@ -3608,22 +3608,22 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[5] = list[i];
-    	child_ctx[7] = i;
+    	child_ctx[6] = list[i];
+    	child_ctx[8] = i;
     	return child_ctx;
     }
 
     function get_each_context_1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[8] = list[i];
-    	child_ctx[7] = i;
+    	child_ctx[9] = list[i];
+    	child_ctx[8] = i;
     	return child_ctx;
     }
 
     // (18:12) {#each weekdays as weekday, i}
     function create_each_block_1(ctx) {
     	let div;
-    	let t_value = /*weekday*/ ctx[8][0] + "";
+    	let t_value = /*weekday*/ ctx[9][0] + "";
     	let t;
 
     	const block = {
@@ -3686,12 +3686,12 @@ var app = (function () {
     // (26:12) {#each calendarData.singleDays as singleDay, i}
     function create_each_block(ctx) {
     	let div;
-    	let t0_value = /*singleDay*/ ctx[5].dateFormate + "";
+    	let t0_value = /*singleDay*/ ctx[6].dateFormate + "";
     	let t0;
     	let div_class_value;
     	let t1;
     	let if_block_anchor;
-    	let if_block = (/*i*/ ctx[7] + 1) % 7 == 0 && create_if_block(ctx);
+    	let if_block = (/*i*/ ctx[8] + 1) % 7 == 0 && create_if_block(ctx);
 
     	const block = {
     		c: function create() {
@@ -3700,7 +3700,7 @@ var app = (function () {
     			t1 = space();
     			if (if_block) if_block.c();
     			if_block_anchor = empty();
-    			attr_dev(div, "class", div_class_value = "item item-days " + (/*singleDay*/ ctx[5].isActiveDay ? "active-month" : "") + " " + (/*singleDay*/ ctx[5].isToday ? "active-day" : "") + " svelte-195o6o4");
+    			attr_dev(div, "class", div_class_value = "item item-days " + (/*singleDay*/ ctx[6].isActiveDay ? "active-month" : "") + " " + (/*singleDay*/ ctx[6].isToday ? "active-day" : "") + " svelte-195o6o4");
     			add_location(div, file$3, 26, 16, 936);
     		},
     		m: function mount(target, anchor) {
@@ -3711,9 +3711,9 @@ var app = (function () {
     			insert_dev(target, if_block_anchor, anchor);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*calendarData*/ 1 && t0_value !== (t0_value = /*singleDay*/ ctx[5].dateFormate + "")) set_data_dev(t0, t0_value);
+    			if (dirty & /*calendarData*/ 1 && t0_value !== (t0_value = /*singleDay*/ ctx[6].dateFormate + "")) set_data_dev(t0, t0_value);
 
-    			if (dirty & /*calendarData*/ 1 && div_class_value !== (div_class_value = "item item-days " + (/*singleDay*/ ctx[5].isActiveDay ? "active-month" : "") + " " + (/*singleDay*/ ctx[5].isToday ? "active-day" : "") + " svelte-195o6o4")) {
+    			if (dirty & /*calendarData*/ 1 && div_class_value !== (div_class_value = "item item-days " + (/*singleDay*/ ctx[6].isActiveDay ? "active-month" : "") + " " + (/*singleDay*/ ctx[6].isToday ? "active-day" : "") + " svelte-195o6o4")) {
     				attr_dev(div, "class", div_class_value);
     			}
     		},
@@ -3949,18 +3949,20 @@ var app = (function () {
     	return block;
     }
 
-    function singleDataObj(obj) {
-    	this.date = obj.date || "";
-    	this.dateFormate = obj.dateFormate || 0;
-    	this.dayInMonth = obj.dayInMonth || 0;
-    	this.dayInWeek = obj.dayInWeek || 0;
-    	this.dayInYear = obj.dayInYear || 0;
-    	this.isToday = obj.isToday || false;
-    	this.isActiveDay = obj.isActiveDay || false;
-    }
-
     function instance$3($$self, $$props, $$invalidate) {
     	const weekdays = [...Array(7).keys()].map(i => locale.localize.day(i, { width: "abbreviated" }));
+
+    	var singleDataObj = function (obj) {
+    		return {
+    			date: obj.date || "",
+    			dateFormate: obj.dateFormate || "",
+    			dayInMonth: obj.dayInMonth || 0,
+    			dayInWeek: obj.dayInWeek || 0,
+    			dayInYear: obj.dayInYear || 0,
+    			isToday: obj.isToday || false,
+    			isActiveDay: obj.isActiveDay || false
+    		};
+    	};
 
     	let calendarData = {
     		today: { dateObj: new Date(), format: "" },
@@ -4065,6 +4067,7 @@ var app = (function () {
     	});
 
     	$$self.$inject_state = $$props => {
+    		if ("singleDataObj" in $$props) singleDataObj = $$props.singleDataObj;
     		if ("calendarData" in $$props) $$invalidate(0, calendarData = $$props.calendarData);
     	};
 

@@ -55,16 +55,18 @@
     
     const weekdays = [...Array(7).keys()].map(i => locale.localize.day(i, { width: 'abbreviated' }))
 
-    function singleDataObj(obj) {
-        this.date = obj.date || ''
-        this.dateFormate = obj.dateFormate || 0
+    var singleDataObj = function(obj) {
+        return {
+            date: obj.date || '',
+            dateFormate: obj.dateFormate || '',
 
-        this.dayInMonth = obj.dayInMonth || 0
-        this.dayInWeek = obj.dayInWeek || 0
-        this.dayInYear = obj.dayInYear || 0
+            dayInMonth: obj.dayInMonth || 0,
+            dayInWeek: obj.dayInWeek || 0,
+            dayInYear: obj.dayInYear || 0,
 
-        this.isToday = obj.isToday || false
-        this.isActiveDay = obj.isActiveDay || false
+            isToday: obj.isToday || false,
+            isActiveDay: obj.isActiveDay || false
+        }   
     }
     
     let calendarData = {
