@@ -1,5 +1,7 @@
 ## Google Calendar - Desgin - Functionality [ cloning ]
 
+This project has been move to this repo [svelte google calendar](https://github.com/karthikricssion/svelte-google-calendar)
+
 Tech stacks
 - Svelte
 - CSS3
