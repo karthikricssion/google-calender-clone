@@ -1,7 +1,10 @@
 <script>
+	import CalenderViewStore from './store';
 	import TopNav from './top-nav/top.nav.svelte'
 	import SideNav from './side-nav/side.nav.svelte'
 	import Calender from './main-calendar/calender.svelte'
+
+	CalenderViewStore.init()
 </script>
 
 <div class="main-app c-flex c-flex-column full-height">

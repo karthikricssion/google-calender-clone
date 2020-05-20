@@ -1,11 +1,12 @@
 <div class="c-flex c-flex-column full-height g-side-navigation">
     <div class="side-bar-contents">
-        <CalenderMini />
+        <CalenderMini today={$CalendarViewStore.today} />
     </div>
 </div>
 
 <script>
     import CalenderMini from '../mini-components/calender.svelte'
+    import CalendarViewStore from '../store';
 </script>
 
 <style>

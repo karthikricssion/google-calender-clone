@@ -24,7 +24,12 @@
     <div class="c-flex s-calendar-days-holder">
         <div class="days-container-holder">
             {#each calendarData.singleDays as singleDay, i}
-                <div class="item item-days { singleDay.isActiveDay ? 'active-month' : '' } { singleDay.isToday ? 'active-day' : ''  }" >{ singleDay.dateFormate }</div>
+                <div 
+                    class="item item-days { singleDay.isActiveDay ? 'active-month' : '' } { singleDay.isToday ? 'active-day' : ''  }" 
+                    on:click={updateSelectedDay(singleDay)}
+                >
+                    { singleDay.dateFormate }
+                </div>
 
                 {#if ((i + 1) % 7 == 0)}
                     <div class="break"></div>
@@ -35,6 +40,8 @@
 </div>
 
 <script>
+    export let today = String;
+    import CalendarViewStore from '../store';
     import { 
         getDay, 
         format, 
@@ -43,6 +50,7 @@
         startOfMonth, 
         subMonths, 
         isToday,
+        isThisMonth,
         addDays,
         subDays,
         getDate,
@@ -52,6 +60,8 @@
     import locale from 'date-fns/esm/locale/en-US'
     import ChevronLeft from "svelte-material-icons/ChevronLeft.svelte";
     import ChevronRight from "svelte-material-icons/ChevronRight.svelte";
+
+    $: $CalendarViewStore.renderMiniCalendar, checkAndUpdateCalender();
     
     const weekdays = [...Array(7).keys()].map(i => locale.localize.day(i, { width: 'abbreviated' }))
 
@@ -71,7 +81,7 @@
     
     let calendarData = {
         today: {
-            dateObj: new Date(),
+            dateObj: today,
             format: ''
         },
         selectedMonth: {
@@ -148,8 +158,24 @@
     function getNextMonth() {
         var getStartOfCurrentMonth  = startOfMonth(calendarData.selectedMonth.dateObj)
         calendarData.selectedMonth.dateObj = addMonths(getStartOfCurrentMonth, 1)
-
         renderCalenderObj()
+    }
+
+    function updateSelectedDay(val) {
+        if(!isThisMonth(val.date)) {
+            calendarData.selectedMonth.dateObj = val.date
+            renderCalenderObj()
+        }
+
+        CalendarViewStore.updateSelectedMonth(val.date)
+    }
+
+    function checkAndUpdateCalender() {
+        if($CalendarViewStore.renderMiniCalendar) {
+            calendarData.selectedMonth.dateObj = new Date() 
+            renderCalenderObj()
+            CalendarViewStore.resetMiniCal()
+        }
     }
 
     renderCalenderObj()

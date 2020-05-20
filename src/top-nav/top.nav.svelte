@@ -1,10 +1,20 @@
 <div class="g-top-navigation">
     <header>
         <div class="logo-toggle-bar">
-            I am nav
+            { $CalendarViewStore.selected.format }
+
+            <button on:click={setToday}>Today</button>
         </div>
     </header>
 </div>
+
+<script>
+    import CalendarViewStore from '../store';
+
+    function setToday() {
+        CalendarViewStore.init()
+    }
+</script>
 
 <style>
     .g-top-navigation {
