@@ -37,7 +37,7 @@ const myStore = () => {
     const methods = {
         init() {
             update(calendarView => {
-                calendarView.today = new Date(),
+                calendarView.today = new Date()
                 calendarView.selected.dateObj = new Date()
                 calendarView.selected.format = formateSelectedDate(calendarView.selected.dateObj)
                 calendarView.renderMiniCalendar = true
